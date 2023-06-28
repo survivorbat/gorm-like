@@ -3,7 +3,7 @@
 [![Go package](https://github.com/survivorbat/gorm-like/actions/workflows/test.yaml/badge.svg)](https://github.com/survivorbat/gorm-like/actions/workflows/test.yaml)
 
 I wanted to provide a map to a WHERE query and automatically turn it into a LIKE query if wildcards were present, this
-plugin does just that.
+plugin does just that. You can either do it for all queries or only for specific fields using the tag `gormlike:"true"`.
 
 ```go
 package main
@@ -14,26 +14,50 @@ import (
 	"gorm.io/gorm"
 )
 
-func main() {
-	db, _ := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+// Employee is the example for normal usage
+type Employee struct {
+	Name string
+}
 
-	// Will match anything with a b
+// RestrictedEmployee is the example for gormlike.TaggedOnly()
+type RestrictedEmployee struct {
+	// Can be LIKE-d on
+	Name string `gormlike:"true"`
+	
+	// Can NOT be LIKE-d on
+	Job string
+}
+
+func main() {
+	// Normal usage
+	db, _ := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	
 	filters := map[string]any{
 		"name": "%b%",
 	}
 
 	db.Use(gormlike.New())
-	db.Where(filters)
-
+	db.Model(&Employee{}).Where(filters)
+	
+	// With custom replacement character
 	db, _ = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 
-	// Will match anything with a b
 	filters := map[string]any{
 		"name": "🍌b🍌",
 	}
 
 	db.Use(gormlike.New(gormlike.WithCharacter("🍌")))
-	db.Where(filters)
+	db.Model(&Employee{}).Where(filters)
+	
+	// Only uses LIKE-queries for tagged fields
+	db, _ = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+
+	filters := map[string]any{
+		"name": "🍌b🍌",
+	}
+
+	db.Use(gormlike.New(gormlike.TaggedOnly()))
+	db.Model(&RestrictedEmployee{}).Where(filters)
 }
 ```
 
@@ -65,4 +89,4 @@ func main() {
 
 ## 🔭 Plans
 
-Turn it into a tag to make it a per-field basis instead of all of them.
+Not much here.

@@ -10,4 +10,5 @@ func ExampleNew() {
 
 	_ = db.Use(New())
 	_ = db.Use(New(WithCharacter("*")))
+	_ = db.Use(New(TaggedOnly()))
 }

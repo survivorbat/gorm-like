@@ -1,10 +1,7 @@
 package gormlike
 
 import (
-	"fmt"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"strings"
 )
 
 // Compile-time interface check
@@ -17,6 +14,14 @@ type Option func(like *gormLike)
 func WithCharacter(character string) Option {
 	return func(like *gormLike) {
 		like.replaceCharacter = character
+	}
+}
+
+// TaggedOnly makes it so that only fields with the tag `gormlike` can be turned into LIKE queries,
+// useful if you don't want every field to be LIKE-able.
+func TaggedOnly() Option {
+	return func(like *gormLike) {
+		like.conditionalTag = true
 	}
 }
 
@@ -33,6 +38,7 @@ func New(opts ...Option) gorm.Plugin {
 
 type gormLike struct {
 	replaceCharacter string
+	conditionalTag   bool
 }
 
 func (d *gormLike) Name() string {
@@ -41,72 +47,4 @@ func (d *gormLike) Name() string {
 
 func (d *gormLike) Initialize(db *gorm.DB) error {
 	return db.Callback().Query().Before("gorm:query").Register("gormlike:query", d.queryCallback)
-}
-
-func (d *gormLike) queryCallback(db *gorm.DB) {
-	exp, ok := db.Statement.Clauses["WHERE"].Expression.(clause.Where)
-	if !ok {
-		return
-	}
-
-	for index, cond := range exp.Exprs {
-		switch cond := cond.(type) {
-		case clause.Eq:
-			switch value := cond.Value.(type) {
-			case string:
-				// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
-				if !strings.Contains(value, "%") && !(d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
-					continue
-				}
-
-				condition := fmt.Sprintf("%s LIKE ?", cond.Column)
-
-				if d.replaceCharacter != "" {
-					value = strings.ReplaceAll(value, d.replaceCharacter, "%")
-				}
-
-				exp.Exprs[index] = db.Session(&gorm.Session{NewDB: true}).Where(condition, value).Statement.Clauses["WHERE"].Expression
-			}
-		case clause.IN:
-			var likeCounter int
-			var useOr bool
-
-			query := db.Session(&gorm.Session{NewDB: true})
-
-			for _, value := range cond.Values {
-				switch value := value.(type) {
-				case string:
-					condition := fmt.Sprintf("%s = ?", cond.Column)
-
-					// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
-					if strings.Contains(value, "%") || (d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
-						condition = fmt.Sprintf("%s LIKE ?", cond.Column)
-
-						if d.replaceCharacter != "" {
-							value = strings.ReplaceAll(value, d.replaceCharacter, "%")
-						}
-
-						likeCounter++
-					}
-
-					if useOr {
-						query = query.Or(condition, value)
-						continue
-					}
-
-					query = query.Where(condition, value)
-					useOr = true
-				}
-			}
-
-			// Don't alter the query if it isn't necessary
-			if likeCounter == 0 {
-				continue
-			}
-
-			exp.Exprs[index] = query.Statement.Clauses["WHERE"].Expression
-		}
-	}
-
-	return
 }
