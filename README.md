@@ -1,4 +1,4 @@
-# 🌌 Gorm Auto Like Plugin
+# 👍 Gorm Auto Like Plugin
 
 [![Go package](https://github.com/survivorbat/gorm-like/actions/workflows/test.yaml/badge.svg)](https://github.com/survivorbat/gorm-like/actions/workflows/test.yaml)
 
