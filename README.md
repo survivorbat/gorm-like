@@ -69,7 +69,7 @@ SELECT * FROM employees WHERE name LIKE "%b%";
 
 ## ⬇️ Installation
 
-`go get github.com/survivorbat/gorm-likes`
+`go get github.com/survivorbat/gorm-like`
 
 ## 📋 Usage
 
