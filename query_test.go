@@ -152,10 +152,10 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectly(t *testing.T) {
 		"more complex multi-value, some like queries with 🍐": {
 			filter: map[string]any{
 				"name":  []string{"jessica", "🍐o🍐"},
-				"other": []string{"aa🍐", "bb"},
+				"other": []string{"aa🍐", "bc"},
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20}, {Name: "John", Age: 25, Other: "bb"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "John", Age: 25, Other: "bb"}},
+			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20, Other: "bc"}, {Name: "John", Age: 25, Other: "bb"}},
+			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}},
 			options:  []Option{WithCharacter("🍐")},
 		},
 	}
@@ -165,7 +165,7 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectly(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name())).Debug()
+			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name()))
 			_ = db.AutoMigrate(&ObjectA{})
 			plugin := New(testData.options...)
 
