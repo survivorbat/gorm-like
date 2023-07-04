@@ -11,19 +11,19 @@ const tagName = "gormlike"
 
 func (d *gormLike) queryCallback(db *gorm.DB) {
 	// If we only want to like queries that are explicitly set to true, we back out early if anything's amiss
-	if d.conditionalSetting {
-		value, ok := db.Get(tagName)
-		if !ok {
-			return
-		}
+	settingValue, settingOk := db.Get(tagName)
+	if d.conditionalSetting && !settingOk {
+		return
+	}
 
-		if boolValue, _ := value.(bool); !boolValue {
+	if settingOk {
+		if boolValue, _ := settingValue.(bool); !boolValue {
 			return
 		}
 	}
 
-	exp, ok := db.Statement.Clauses["WHERE"].Expression.(clause.Where)
-	if !ok {
+	exp, settingOk := db.Statement.Clauses["WHERE"].Expression.(clause.Where)
+	if !settingOk {
 		return
 	}
 
@@ -33,7 +33,7 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 			if d.conditionalTag {
 				value := db.Statement.Schema.FieldsByDBName[cond.Column.(string)].Tag.Get(tagName)
 
-				// Ignore if there's no valid tag value
+				// Ignore if there's no valid tag settingValue
 				if value != "true" {
 					continue
 				}
@@ -60,7 +60,7 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 			if d.conditionalTag {
 				value := db.Statement.Schema.FieldsByDBName[cond.Column.(string)].Tag.Get(tagName)
 
-				// Ignore if there's no valid tag value
+				// Ignore if there's no valid tag settingValue
 				if value != "true" {
 					continue
 				}

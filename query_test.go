@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestDeepGorm_Initialize_TriggersLikingCorrectly(t *testing.T) {
+func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 	t.Parallel()
 
 	type ObjectA struct {
@@ -120,6 +120,17 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query:    defaultQuery,
 			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20}, {Name: "John", Age: 25, Other: "bb"}},
 			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "John", Age: 25, Other: "bb"}},
+		},
+		"explicitly disable liking in query": {
+			filter: map[string]any{
+				"name":  []string{"jessica", "%o%"},
+				"other": []string{"aa%", "bb"},
+			},
+			query: func(db *gorm.DB) *gorm.DB {
+				return db.Set(tagName, false)
+			},
+			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20}, {Name: "John", Age: 25, Other: "bb"}},
+			expected: []ObjectA{},
 		},
 
 		// With custom character
@@ -274,7 +285,7 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectly(t *testing.T) {
 	}
 }
 
-func TestDeepGorm_Initialize_TriggersLikingCorrectlyWithConditional(t *testing.T) {
+func TestGormLike_Initialize_TriggersLikingCorrectlyWithConditionalTag(t *testing.T) {
 	t.Parallel()
 
 	type ObjectB struct {
@@ -346,7 +357,7 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectlyWithConditional(t *testing.T
 	}
 }
 
-func TestDeepGorm_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
+func TestGormLike_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
 	t.Parallel()
 
 	type ObjectB struct {
