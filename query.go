@@ -10,6 +10,18 @@ import (
 const tagName = "gormlike"
 
 func (d *gormLike) queryCallback(db *gorm.DB) {
+	// If we only want to like queries that are explicitly set to true, we back out early if anything's amiss
+	if d.conditionalSetting {
+		value, ok := db.Get(tagName)
+		if !ok {
+			return
+		}
+
+		if boolValue, _ := value.(bool); !boolValue {
+			return
+		}
+	}
+
 	exp, ok := db.Statement.Clauses["WHERE"].Expression.(clause.Where)
 	if !ok {
 		return

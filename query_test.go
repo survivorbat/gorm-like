@@ -250,7 +250,7 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectly(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name())).Debug()
+			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name()))
 			_ = db.AutoMigrate(&ObjectA{})
 			plugin := New(testData.options...)
 
@@ -322,7 +322,7 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectlyWithConditional(t *testing.T
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name())).Debug()
+			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name()))
 			_ = db.AutoMigrate(&ObjectB{})
 			plugin := New(TaggedOnly())
 
@@ -330,6 +330,93 @@ func TestDeepGorm_Initialize_TriggersLikingCorrectlyWithConditional(t *testing.T
 				t.Error(err)
 				t.FailNow()
 			}
+
+			// Act
+			err := db.Use(plugin)
+
+			// Assert
+			assert.Nil(t, err)
+
+			var actual []ObjectB
+			err = db.Where(testData.filter).Find(&actual).Error
+			assert.Nil(t, err)
+
+			assert.Equal(t, testData.expected, actual)
+		})
+	}
+}
+
+func TestDeepGorm_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
+	t.Parallel()
+
+	type ObjectB struct {
+		Name  string
+		Other string
+	}
+
+	tests := map[string]struct {
+		filter   map[string]any
+		query    func(*gorm.DB) *gorm.DB
+		existing []ObjectB
+		expected []ObjectB
+	}{
+		"like with query set to true": {
+			filter: map[string]any{
+				"name": "jes%",
+			},
+			query: func(db *gorm.DB) *gorm.DB {
+				return db.Set(tagName, true)
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{{Name: "jessica", Other: "abc"}},
+		},
+		"like with query set to false": {
+			filter: map[string]any{
+				"name": "jes%",
+			},
+			query: func(db *gorm.DB) *gorm.DB {
+				return db.Set(tagName, false)
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{},
+		},
+		"like with query set to random value": {
+			filter: map[string]any{
+				"name": "jes%",
+			},
+			query: func(db *gorm.DB) *gorm.DB {
+				return db.Set(tagName, "yes")
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{},
+		},
+		"like with query unset": {
+			filter: map[string]any{
+				"name": "jes%",
+			},
+			query: func(db *gorm.DB) *gorm.DB {
+				return db
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{},
+		},
+	}
+
+	for name, testData := range tests {
+		testData := testData
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name()))
+			_ = db.AutoMigrate(&ObjectB{})
+			plugin := New(SettingOnly())
+
+			if err := db.CreateInBatches(testData.existing, 10).Error; err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+
+			db = testData.query(db)
 
 			// Act
 			err := db.Use(plugin)

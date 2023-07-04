@@ -9,6 +9,8 @@ func ExampleNew() {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 
 	_ = db.Use(New())
+
 	_ = db.Use(New(WithCharacter("*")))
 	_ = db.Use(New(TaggedOnly()))
+	_ = db.Use(New(SettingOnly()))
 }

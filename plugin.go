@@ -25,7 +25,16 @@ func TaggedOnly() Option {
 	}
 }
 
-// New creates a new instance of the plugin that can be registered in gorm.
+// SettingOnly makes it so that only queries with the setting 'gormlike' set to true can be turned into LIKE queries.
+// This can be configured using db.Set("gormlike", true) on the query.
+func SettingOnly() Option {
+	return func(like *gormLike) {
+		like.conditionalSetting = true
+	}
+}
+
+// New creates a new instance of the plugin that can be registered in gorm. Without any settings, all queries will be
+// LIKE-d.
 func New(opts ...Option) gorm.Plugin {
 	plugin := &gormLike{}
 
@@ -37,8 +46,9 @@ func New(opts ...Option) gorm.Plugin {
 }
 
 type gormLike struct {
-	replaceCharacter string
-	conditionalTag   bool
+	replaceCharacter   string
+	conditionalTag     bool
+	conditionalSetting bool
 }
 
 func (d *gormLike) Name() string {
