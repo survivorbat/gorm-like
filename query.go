@@ -63,7 +63,6 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 			exp.Exprs[index] = db.Session(&gorm.Session{NewDB: true}).Where(condition, value).Statement.Clauses["WHERE"].Expression
 		case clause.IN:
 			if d.conditionalTag {
-				fmt.Printf("EEEEEEEEEEEE")
 				columnName, ok := cond.Column.(string)
 				if !ok {
 					continue
