@@ -31,7 +31,12 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 		switch cond := cond.(type) {
 		case clause.Eq:
 			if d.conditionalTag {
-				value := db.Statement.Schema.FieldsByDBName[cond.Column.(string)].Tag.Get(tagName)
+				columnName, ok := cond.Column.(string)
+				if !ok {
+					continue
+				}
+
+				value := db.Statement.Schema.FieldsByDBName[columnName].Tag.Get(tagName)
 
 				// Ignore if there's no valid tag settingValue
 				if value != "true" {
@@ -58,7 +63,13 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 			exp.Exprs[index] = db.Session(&gorm.Session{NewDB: true}).Where(condition, value).Statement.Clauses["WHERE"].Expression
 		case clause.IN:
 			if d.conditionalTag {
-				value := db.Statement.Schema.FieldsByDBName[cond.Column.(string)].Tag.Get(tagName)
+				fmt.Printf("EEEEEEEEEEEE")
+				columnName, ok := cond.Column.(string)
+				if !ok {
+					continue
+				}
+
+				value := db.Statement.Schema.FieldsByDBName[columnName].Tag.Get(tagName)
 
 				// Ignore if there's no valid tag settingValue
 				if value != "true" {
