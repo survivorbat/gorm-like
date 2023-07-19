@@ -28,6 +28,6 @@ func TestDeepGorm_Initialize_RegistersCallback(t *testing.T) {
 	err := plugin.Initialize(db)
 
 	// Assert
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, db.Callback().Query().Get("gormlike:query"))
 }

@@ -274,11 +274,11 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			err := db.Use(plugin)
 
 			// Assert
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			var actual []ObjectA
 			err = testData.query(db).Where(testData.filter).Find(&actual).Error
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			assert.Equal(t, testData.expected, actual)
 		})
@@ -346,11 +346,11 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithConditionalTag(t *testin
 			err := db.Use(plugin)
 
 			// Assert
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			var actual []ObjectB
 			err = db.Where(testData.filter).Find(&actual).Error
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			assert.Equal(t, testData.expected, actual)
 		})
@@ -433,11 +433,11 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
 			err := db.Use(plugin)
 
 			// Assert
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			var actual []ObjectB
 			err = db.Where(testData.filter).Find(&actual).Error
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			assert.Equal(t, testData.expected, actual)
 		})
