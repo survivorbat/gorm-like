@@ -3,7 +3,7 @@
 [![Go package](https://github.com/survivorbat/gorm-like/actions/workflows/test.yaml/badge.svg)](https://github.com/survivorbat/gorm-like/actions/workflows/test.yaml)
 
 I wanted to provide a map to a WHERE query and automatically turn it into a LIKE query if wildcards were present, this
-plugin does just that.
+plugin does just that. [If you want to convert queries based on prefix, you should have a look at gorm-query-convert](https://github.com/survivorbat/gorm-query-convert).
 
 By default, all queries are turned into like-queries if either a % or a given character is found, if you don't want this,
 you have 2 options:
