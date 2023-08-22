@@ -114,7 +114,6 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 				continue
 			}
 
-			// TODO: Determine whether this is efficient
 			exp.Exprs[index] = db.Session(&gorm.Session{NewDB: true}).Where(query).Statement.Clauses["WHERE"].Expression
 		}
 	}
