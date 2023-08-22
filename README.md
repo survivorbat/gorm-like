@@ -14,6 +14,13 @@ you have 2 options:
 If you want a particular query to not be like-able, use `.Set("gormlike", false)`. This works
 regardless of configuration.
 
+## 💡 Related Libraries
+
+- [deepgorm](https://github.com/survivorbat/gorm-deep-filtering) turns nested maps in WHERE-calls into subqueries
+- [gormlike](https://github.com/survivorbat/gorm-like) turns WHERE-calls into LIkE queries if certain tokens were found
+- [gormcase](https://github.com/survivorbat/gorm-case) adds case insensitivity to WHERE queries
+- [gormtestutil](https://github.com/ing-bank/gormtestutil) provides easy utility methods for unit-testing with gorm
+
 ## ⬇️ Installation
 
 `go get github.com/survivorbat/gorm-like`
