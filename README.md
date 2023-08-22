@@ -17,7 +17,7 @@ regardless of configuration.
 ## 💡 Related Libraries
 
 - [deepgorm](https://github.com/survivorbat/gorm-deep-filtering) turns nested maps in WHERE-calls into subqueries
-- [gormlike](https://github.com/survivorbat/gorm-like) turns WHERE-calls into LIkE queries if certain tokens were found
+- [gormqonvert](https://github.com/survivorbat/gorm-query-convert) turns WHERE-calls into different queries if certain tokens were found
 - [gormcase](https://github.com/survivorbat/gorm-case) adds case insensitivity to WHERE queries
 - [gormtestutil](https://github.com/ing-bank/gormtestutil) provides easy utility methods for unit-testing with gorm
 
