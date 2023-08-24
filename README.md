@@ -11,7 +11,7 @@ you have 2 options:
 - `TaggedOnly()`: Will only change queries on fields that have the `gormlike:"true"` tag
 - `SettingOnly()`: Will only change queries on `*gorm.DB` objects that have `.Set("gormlike", true)` set.
 
-If you want a particular query to not be like-able, use `.Set("gormlike", false)`. This works
+If you want a particular query or field to not be like-able, use `.Set("gormlike", false)` or `gormlike:"false"` respectively. These work
 regardless of configuration.
 
 ## 💡 Related Libraries

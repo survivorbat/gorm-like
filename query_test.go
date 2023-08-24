@@ -357,6 +357,71 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithConditionalTag(t *testin
 	}
 }
 
+func TestGormLike_Initialize_AlwaysIgnoresFieldsWithGormLikeFalse(t *testing.T) {
+	t.Parallel()
+
+	type ObjectB struct {
+		Name  string
+		Other string `gormlike:"false"`
+	}
+
+	tests := map[string]struct {
+		filter   map[string]any
+		existing []ObjectB
+		expected []ObjectB
+	}{
+		"Normal filter works on never field": {
+			filter: map[string]any{
+				"other": "abc",
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}, {Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{{Name: "jessica", Other: "abc"}, {Name: "jessica", Other: "abc"}},
+		},
+		"simple filter on disallowed fields": {
+			filter: map[string]any{
+				"other": "%b%",
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}, {Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{},
+		},
+		"multi-filter on disallowed fields": {
+			filter: map[string]any{
+				"other": []string{"%b%", "%c%"},
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}, {Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{},
+		},
+	}
+
+	for name, testData := range tests {
+		testData := testData
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name()))
+			_ = db.AutoMigrate(&ObjectB{})
+			plugin := New(TaggedOnly())
+
+			if err := db.CreateInBatches(testData.existing, 10).Error; err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+
+			// Act
+			err := db.Use(plugin)
+
+			// Assert
+			assert.NoError(t, err)
+
+			var actual []ObjectB
+			err = db.Where(testData.filter).Find(&actual).Error
+			assert.NoError(t, err)
+
+			assert.Equal(t, testData.expected, actual)
+		})
+	}
+}
+
 func TestGormLike_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
 	t.Parallel()
 

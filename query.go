@@ -30,22 +30,26 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 	for index, cond := range exp.Exprs {
 		switch cond := cond.(type) {
 		case clause.Eq:
-			if d.conditionalTag {
-				columnName, ok := cond.Column.(string)
-				if !ok {
-					continue
-				}
-
-				value := db.Statement.Schema.FieldsByDBName[columnName].Tag.Get(tagName)
-
-				// Ignore if there's no valid tag settingValue
-				if value != "true" {
-					continue
-				}
+			columnName, columnOk := cond.Column.(string)
+			if !columnOk {
+				continue
 			}
 
-			value, ok := cond.Value.(string)
-			if !ok {
+			// Get the `gormlike` value
+			tagValue := db.Statement.Schema.FieldsByDBName[columnName].Tag.Get(tagName)
+
+			// If the user has explicitly set this to false, ignore this field
+			if tagValue == "false" {
+				continue
+			}
+
+			// If tags are required and the tag is not true, ignore this field
+			if d.conditionalTag && tagValue != "true" {
+				continue
+			}
+
+			value, columnOk := cond.Value.(string)
+			if !columnOk {
 				continue
 			}
 
@@ -62,18 +66,22 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 
 			exp.Exprs[index] = db.Session(&gorm.Session{NewDB: true}).Where(condition, value).Statement.Clauses["WHERE"].Expression
 		case clause.IN:
-			if d.conditionalTag {
-				columnName, ok := cond.Column.(string)
-				if !ok {
-					continue
-				}
+			columnName, columnOk := cond.Column.(string)
+			if !columnOk {
+				continue
+			}
 
-				value := db.Statement.Schema.FieldsByDBName[columnName].Tag.Get(tagName)
+			// Get the `gormlike` value
+			tagValue := db.Statement.Schema.FieldsByDBName[columnName].Tag.Get(tagName)
 
-				// Ignore if there's no valid tag settingValue
-				if value != "true" {
-					continue
-				}
+			// If the user has explicitly set this to false, ignore this field
+			if tagValue == "false" {
+				continue
+			}
+
+			// If tags are required and the tag is not true, ignore this field
+			if d.conditionalTag && tagValue != "true" {
+				continue
 			}
 
 			var likeCounter int
