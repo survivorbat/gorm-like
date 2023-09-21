@@ -2,13 +2,15 @@ package gormlike
 
 import (
 	"fmt"
+	"strings"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
 )
 
 const tagName = "gormlike"
 
+//nolint:gocognit,cyclop // Acceptable
 func (d *gormLike) queryCallback(db *gorm.DB) {
 	// If we only want to like queries that are explicitly set to true, we back out early if anything's amiss
 	settingValue, settingOk := db.Get(tagName)
@@ -110,6 +112,7 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 
 				if useOr {
 					query = query.Or(condition, value)
+
 					continue
 				}
 

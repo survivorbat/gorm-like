@@ -35,6 +35,8 @@ func SettingOnly() Option {
 
 // New creates a new instance of the plugin that can be registered in gorm. Without any settings, all queries will be
 // LIKE-d.
+//
+//nolint:ireturn // Acceptable
 func New(opts ...Option) gorm.Plugin {
 	plugin := &gormLike{}
 

@@ -1,9 +1,10 @@
 package gormlike
 
 import (
+	"testing"
+
 	"github.com/ing-bank/gormtestutil"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestDeepGorm_Name_ReturnsExpectedName(t *testing.T) {

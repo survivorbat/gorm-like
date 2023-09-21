@@ -1,13 +1,15 @@
 package gormlike
 
 import (
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/ing-bank/gormtestutil"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
-	"testing"
 )
 
+// nolint:maintidx // Acceptable
 func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 	t.Parallel()
 
