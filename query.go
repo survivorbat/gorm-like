@@ -78,7 +78,11 @@ func (d *gormLike) queryCallback(db *gorm.DB) {
 			}
 
 			// Get the `gormlike` value
-			tagValue := db.Statement.Schema.FieldsByDBName[columnName].Tag.Get(tagName)
+			var tagValue string
+			dbField, ok := db.Statement.Schema.FieldsByDBName[columnName]
+			if ok {
+				tagValue = dbField.Tag.Get(tagName)
+			}
 
 			// If the user has explicitly set this to false, ignore this field
 			if tagValue == "false" {
