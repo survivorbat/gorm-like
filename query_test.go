@@ -510,3 +510,60 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
 		})
 	}
 }
+
+func TestGormLike_Initialize_ProcessUnknownFields(t *testing.T) {
+	t.Parallel()
+
+	type ObjectB struct {
+		Name  string
+		Other string
+	}
+
+	tests := map[string]struct {
+		filter   map[string]any
+		query    func(*gorm.DB) *gorm.DB
+		existing []ObjectB
+		expected []ObjectB
+	}{
+		"like with unknown field": {
+			filter: map[string]any{
+				"name":          "jes%",
+				"unknown_field": false,
+			},
+			query: func(db *gorm.DB) *gorm.DB {
+				return db.Set(tagName, true)
+			},
+			existing: []ObjectB{{Name: "jessica", Other: "abc"}},
+			expected: []ObjectB{},
+		},
+	}
+
+	for name, testData := range tests {
+		testData := testData
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			db := gormtestutil.NewMemoryDatabase(t, gormtestutil.WithName(t.Name()))
+			_ = db.AutoMigrate(&ObjectB{})
+			plugin := New(SettingOnly())
+
+			if err := db.CreateInBatches(testData.existing, 10).Error; err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+
+			db = testData.query(db)
+
+			// Act
+			err := db.Use(plugin)
+
+			// Assert
+			assert.NoError(t, err)
+
+			var actual []ObjectB
+			err = db.Where(testData.filter).Find(&actual).Error
+			assert.Equal(t, "no such column: unknown_field", err.Error())
+			assert.Nil(t, actual)
+		})
+	}
+}
