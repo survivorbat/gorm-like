@@ -20,7 +20,7 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 		Other string
 	}
 
-	defaultQuery := func(db *gorm.DB) *gorm.DB { return db.Debug() }
+	defaultQuery := func(db *gorm.DB) *gorm.DB { return db }
 
 	tests := map[string]struct {
 		filter   map[string]any

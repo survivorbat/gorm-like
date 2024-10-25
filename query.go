@@ -14,9 +14,11 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 	for index, cond := range expressions {
 		switch cond := cond.(type) {
 		case clause.AndConditions:
+			// Recursively go through the expressions of AndConditions
 			cond.Exprs = d.replaceExpressions(db, cond.Exprs)
 			expressions[index] = cond
 		case clause.OrConditions:
+			// Recursively go through the expressions of OrConditions
 			cond.Exprs = d.replaceExpressions(db, cond.Exprs)
 			expressions[index] = cond
 		case clause.Eq:
@@ -52,7 +54,7 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 				continue
 			}
 
-			condition := fmt.Sprintf("%s LIKE ?", cond.Column)
+			condition := fmt.Sprintf("CAST(%s as varchar) LIKE ?", cond.Column)
 
 			if d.replaceCharacter != "" {
 				value = strings.ReplaceAll(value, d.replaceCharacter, "%")
@@ -96,7 +98,7 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 
 				// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
 				if strings.Contains(value, "%") || (d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
-					condition = fmt.Sprintf("%s LIKE ?", cond.Column)
+					condition = fmt.Sprintf("CAST(%s as varchar) LIKE ?", cond.Column)
 
 					if d.replaceCharacter != "" {
 						value = strings.ReplaceAll(value, d.replaceCharacter, "%")
