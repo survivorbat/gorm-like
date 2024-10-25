@@ -1,4 +1,4 @@
-module github.com/survivorbat/gorm-like
+module github.com/bramca/gorm-like
 
 go 1.23.1
 
