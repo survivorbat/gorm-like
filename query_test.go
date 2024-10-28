@@ -9,39 +9,37 @@ import (
 	"gorm.io/gorm"
 )
 
-type ObjectA struct {
-	ID    uuid.UUID
-	Name  string
-	Age   int
-	Other string
-}
+// nolint:maintidx // Acceptable
+func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
+	t.Parallel()
 
-var (
-	jessica1 = ObjectA{
+	type ObjectA struct {
+		ID    uuid.UUID
+		Name  string
+		Age   int
+		Other string
+	}
+
+	jessica1 := ObjectA{
 		ID:   uuid.MustParse("30611aa6-6fdc-4eb1-b6e2-13485d6c86da"),
 		Name: "jessica",
 		Age:  53,
 	}
-	jessica2 = ObjectA{
+	jessica2 := ObjectA{
 		ID:   uuid.MustParse("90c80a13-9c5a-415f-a1da-ba4b4359262f"),
 		Name: "jessica",
 		Age:  20,
 	}
-	amy = ObjectA{
+	amy := ObjectA{
 		ID:   uuid.MustParse("f02b0a72-00a5-437b-a8ab-48f033ae3373"),
 		Name: "amy",
 		Age:  20,
 	}
-	john = ObjectA{
+	john := ObjectA{
 		ID:   uuid.MustParse("aa294a48-76c0-4a5c-ae0a-0422f7f7803c"),
 		Name: "John",
 		Age:  25,
 	}
-)
-
-// nolint:maintidx // Acceptable
-func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
-	t.Parallel()
 
 	defaultQuery := func(db *gorm.DB) *gorm.DB { return db }
 
