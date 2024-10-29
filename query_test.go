@@ -20,6 +20,27 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 		Other string
 	}
 
+	jessica1 := ObjectA{
+		ID:   uuid.MustParse("30611aa6-6fdc-4eb1-b6e2-13485d6c86da"),
+		Name: "jessica",
+		Age:  53,
+	}
+	jessica2 := ObjectA{
+		ID:   uuid.MustParse("90c80a13-9c5a-415f-a1da-ba4b4359262f"),
+		Name: "jessica",
+		Age:  20,
+	}
+	amy := ObjectA{
+		ID:   uuid.MustParse("f02b0a72-00a5-437b-a8ab-48f033ae3373"),
+		Name: "amy",
+		Age:  20,
+	}
+	john := ObjectA{
+		ID:   uuid.MustParse("aa294a48-76c0-4a5c-ae0a-0422f7f7803c"),
+		Name: "John",
+		Age:  25,
+	}
+
 	defaultQuery := func(db *gorm.DB) *gorm.DB { return db }
 
 	tests := map[string]struct {
@@ -41,8 +62,8 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"name": "jessica",
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 46}, {Name: "amy", Age: 35}},
-			expected: []ObjectA{{Name: "jessica", Age: 46}},
+			existing: []ObjectA{jessica1, amy},
+			expected: []ObjectA{jessica1},
 		},
 		"more complex where query": {
 			filter: map[string]any{
@@ -50,16 +71,16 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"age":  53,
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "jessica", Age: 20}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}},
+			existing: []ObjectA{jessica1, jessica2},
+			expected: []ObjectA{jessica1},
 		},
 		"multi-value where query": {
 			filter: map[string]any{
 				"name": []string{"jessica", "amy"},
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}},
+			existing: []ObjectA{jessica1, amy},
+			expected: []ObjectA{jessica1, amy},
 		},
 		"more complex multi-value where query": {
 			filter: map[string]any{
@@ -67,8 +88,8 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"age":  []int{53, 20},
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}},
+			existing: []ObjectA{jessica1, amy},
+			expected: []ObjectA{jessica1, amy},
 		},
 
 		// On to the 'real' tests
@@ -77,8 +98,16 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"name": "%a%",
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1, amy},
+		},
+		"simple like query on uuid": {
+			filter: map[string]any{
+				"id": "%aa%",
+			},
+			query:    defaultQuery,
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1, john},
 		},
 		"more complex like query": {
 			filter: map[string]any{
@@ -86,42 +115,57 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"age":  20,
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "amy", Age: 20}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{amy},
 		},
 		"multi-value, all like queries": {
 			filter: map[string]any{
 				"name": []string{"%a%", "%o%"},
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1, amy, john},
 		},
 		"more complex multi-value, all like queries": {
 			filter: map[string]any{
 				"name":  []string{"%a%", "%o%"},
 				"other": []string{"%ooo", "aaa%"},
 			},
-			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aaaooo"}, {Name: "amy", Age: 20, Other: "aaaooo"}, {Name: "John", Age: 25, Other: "aaaooo"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aaaooo"}, {Name: "amy", Age: 20, Other: "aaaooo"}, {Name: "John", Age: 25, Other: "aaaooo"}},
+			query: defaultQuery,
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aaaooo"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "aaaooo"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "aaaooo"},
+			},
+			expected: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aaaooo"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "aaaooo"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "aaaooo"},
+			},
 		},
 		"multi-value, some like queries": {
 			filter: map[string]any{
 				"name": []string{"jessica", "%o%"},
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "John", Age: 25}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1, john},
 		},
 		"more complex multi-value, some like queries": {
 			filter: map[string]any{
 				"name":  []string{"jessica", "%o%"},
 				"other": []string{"aa%", "bb"},
 			},
-			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20}, {Name: "John", Age: 25, Other: "bb"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "John", Age: 25, Other: "bb"}},
+			query: defaultQuery,
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aab"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "bb"},
+			},
+			expected: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aab"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "bb"},
+			},
 		},
 		"explicitly disable liking in query": {
 			filter: map[string]any{
@@ -131,7 +175,11 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query: func(db *gorm.DB) *gorm.DB {
 				return db.Set(tagName, false)
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20}, {Name: "John", Age: 25, Other: "bb"}},
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aab"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "bb"},
+			},
 			expected: []ObjectA{},
 		},
 
@@ -141,8 +189,8 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"name": "🍌a🍌",
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1, amy},
 			options:  []Option{WithCharacter("🍌")},
 		},
 		"more complex like query with 🍓": {
@@ -151,8 +199,8 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"age":  20,
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "amy", Age: 20}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{amy},
 			options:  []Option{WithCharacter("🍓")},
 		},
 		"multi-value, all like queries with 🍎": {
@@ -160,8 +208,8 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"name": []string{"🍎a🍎", "🍎o🍎"},
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1, amy, john},
 			options:  []Option{WithCharacter("🍎")},
 		},
 		"more complex multi-value, all like queries with 🍎": {
@@ -169,18 +217,26 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"name":  []string{"🍎a🍎", "🍎o🍎"},
 				"other": []string{"🍎ooo", "aaa🍎"},
 			},
-			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aaaooo"}, {Name: "amy", Age: 20, Other: "aaaooo"}, {Name: "John", Age: 25, Other: "aaaooo"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aaaooo"}, {Name: "amy", Age: 20, Other: "aaaooo"}, {Name: "John", Age: 25, Other: "aaaooo"}},
-			options:  []Option{WithCharacter("🍎")},
+			query: defaultQuery,
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aaaooo"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "aaaooo"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "aaaooo"},
+			},
+			expected: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aaaooo"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "aaaooo"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "aaaooo"},
+			},
+			options: []Option{WithCharacter("🍎")},
 		},
 		"multi-value, some like queries with 🍐": {
 			filter: map[string]any{
 				"name": []string{"jessica", "🍐o🍐"},
 			},
 			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}, {Name: "John", Age: 25}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1, john},
 			options:  []Option{WithCharacter("🍐")},
 		},
 		"more complex multi-value, some like queries with 🍐": {
@@ -188,10 +244,16 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 				"name":  []string{"jessica", "🍐o🍐"},
 				"other": []string{"aa🍐", "bc"},
 			},
-			query:    defaultQuery,
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20, Other: "bc"}, {Name: "John", Age: 25, Other: "bb"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}},
-			options:  []Option{WithCharacter("🍐")},
+			query: defaultQuery,
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aab"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "bc"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "bb"},
+			},
+			expected: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aab"},
+			},
+			options: []Option{WithCharacter("🍐")},
 		},
 
 		// With existing query
@@ -202,8 +264,14 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query: func(db *gorm.DB) *gorm.DB {
 				return db.Where("other = ?", "goodbye")
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "hello"}, {Name: "amy", Age: 20, Other: "goodbye"}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "amy", Age: 20, Other: "goodbye"}},
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "hello"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "goodbye"},
+				{ID: john.ID, Name: john.Name, Age: john.Age},
+			},
+			expected: []ObjectA{
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "goodbye"},
+			},
 		},
 		"more complex like query with existing calls": {
 			filter: map[string]any{
@@ -213,8 +281,14 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query: func(db *gorm.DB) *gorm.DB {
 				return db.Where("other = ?", "def")
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "abc"}, {Name: "amy", Age: 20, Other: "def"}, {Name: "John", Age: 25, Other: "ghi"}},
-			expected: []ObjectA{{Name: "amy", Age: 20, Other: "def"}},
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "abc"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "def"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "ghi"},
+			},
+			expected: []ObjectA{
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "def"},
+			},
 		},
 		"multi-value, all like queries with existing calls": {
 			filter: map[string]any{
@@ -223,8 +297,16 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query: func(db *gorm.DB) *gorm.DB {
 				return db.Where("other = ?", "no").Or("other = ?", "yes").Or("other = ?", "maybe")
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "no"}, {Name: "amy", Age: 20, Other: "yes"}, {Name: "John", Age: 25, Other: "maybe"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "no"}, {Name: "amy", Age: 20, Other: "yes"}, {Name: "John", Age: 25, Other: "maybe"}},
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "no"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "yes"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "maybe"},
+			},
+			expected: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "no"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "yes"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "maybe"},
+			},
 		},
 		"more complex multi-value, all like queries with existing calls": {
 			filter: map[string]any{
@@ -233,8 +315,16 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query: func(db *gorm.DB) *gorm.DB {
 				return db.Where("name LIKE ?", "%a%").Or("name LIKE ?", "%o%")
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aaaooo"}, {Name: "amy", Age: 20, Other: "aaaooo"}, {Name: "John", Age: 25, Other: "aaaooo"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aaaooo"}, {Name: "amy", Age: 20, Other: "aaaooo"}, {Name: "John", Age: 25, Other: "aaaooo"}},
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aaaooo"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "aaaooo"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "aaaooo"},
+			},
+			expected: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aaaooo"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "aaaooo"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "aaaooo"},
+			},
 		},
 		"multi-value, some like queries with existing calls": {
 			filter: map[string]any{
@@ -243,8 +333,8 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query: func(db *gorm.DB) *gorm.DB {
 				return db.Where("name = ?", "jessica")
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53}, {Name: "amy", Age: 20}, {Name: "John", Age: 25}},
-			expected: []ObjectA{{Name: "jessica", Age: 53}},
+			existing: []ObjectA{jessica1, amy, john},
+			expected: []ObjectA{jessica1},
 		},
 		"more complex multi-value, some like queries with existing calls": {
 			filter: map[string]any{
@@ -253,8 +343,15 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			query: func(db *gorm.DB) *gorm.DB {
 				return db.Where("name = ?", "jessica").Or("name LIKE ?", "%o%")
 			},
-			existing: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "amy", Age: 20}, {Name: "John", Age: 25, Other: "bb"}},
-			expected: []ObjectA{{Name: "jessica", Age: 53, Other: "aab"}, {Name: "John", Age: 25, Other: "bb"}},
+			existing: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aab"},
+				{ID: amy.ID, Name: amy.Name, Age: amy.Age, Other: "bc"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "bb"},
+			},
+			expected: []ObjectA{
+				{ID: jessica1.ID, Name: jessica1.Name, Age: jessica1.Age, Other: "aab"},
+				{ID: john.ID, Name: john.Name, Age: john.Age, Other: "bb"},
+			},
 		},
 	}
 
