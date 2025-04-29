@@ -116,6 +116,7 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 			}
 
 			expressions[index] = query.Statement.Clauses["WHERE"].Expression.(clause.Where)
+
 			// This feels a bit like a dirty hack
 			// but otherwise the generated query would not be correct in case of an AND condition between multiple OR conditions
 			// e.g. without this -> x = .. OR x = .. AND y = .. OR y = .. (no brackets around the OR conditions mess up the query)
