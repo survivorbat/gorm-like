@@ -10,6 +10,7 @@ import (
 
 const tagName = "gormlike"
 
+//nolint:gocognit,cyclop // is a complex, recursive function
 func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expression) []clause.Expression {
 	for index, cond := range expressions {
 		switch cond := cond.(type) {
@@ -49,8 +50,8 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 				continue
 			}
 
-			// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
-			if !strings.Contains(value, "%") && !(d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
+			// If there are no % AND there aren't only replaceable characters, just skip it because it's a normal query
+			if !strings.Contains(value, "%") && (d.replaceCharacter == "" || !strings.Contains(value, d.replaceCharacter)) {
 				continue
 			}
 
@@ -89,14 +90,14 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 			query := db.Session(&gorm.Session{NewDB: true})
 
 			for _, value := range cond.Values {
-				value, ok := value.(string)
-				if !ok {
+				value, valueOk := value.(string)
+				if !valueOk {
 					continue
 				}
 
 				condition := fmt.Sprintf("%s = ?", cond.Column)
 
-				// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
+				// If there are no % AND there aren't only replaceable characters, just skip it because it's a normal query
 				if strings.Contains(value, "%") || (d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
 					condition = fmt.Sprintf("CAST(%s as varchar) LIKE ?", cond.Column)
 
@@ -115,14 +116,22 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 				continue
 			}
 
+			whereExpression, ok := query.Statement.Clauses["WHERE"].Expression.(clause.Where)
+
+			if ok {
+				expressions[index] = whereExpression
+			}
+
 			// This feels a bit like a dirty hack
 			// but otherwise the generated query would not be correct in case of an AND condition between multiple OR conditions
 			// e.g. without this -> x = .. OR x = .. AND y = .. OR y = .. (no brackets around the OR conditions mess up the query)
 			// e.g. with this -> (x = .. OR x = ..) AND (y = .. OR y = ..)
-			var newExpression clause.OrConditions
-			newExpression.Exprs = query.Statement.Clauses["WHERE"].Expression.(clause.Where).Exprs
+			if len(whereExpression.Exprs) > 1 {
+				var newExpression clause.OrConditions
+				newExpression.Exprs = whereExpression.Exprs
 
-			expressions[index] = newExpression
+				expressions[index] = newExpression
+			}
 		}
 	}
 

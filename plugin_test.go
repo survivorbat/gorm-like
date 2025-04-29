@@ -5,6 +5,7 @@ import (
 
 	"github.com/ing-bank/gormtestutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeepGorm_Name_ReturnsExpectedName(t *testing.T) {
@@ -29,6 +30,6 @@ func TestDeepGorm_Initialize_RegistersCallback(t *testing.T) {
 	err := plugin.Initialize(db)
 
 	// Assert
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, db.Callback().Query().Get("gormlike:query"))
 }
