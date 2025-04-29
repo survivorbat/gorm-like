@@ -6,10 +6,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/ing-bank/gormtestutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
-// nolint:maintidx // Acceptable
+//nolint:maintidx // Acceptable
 func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 	t.Parallel()
 
@@ -356,7 +357,6 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -373,12 +373,12 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			err := db.Use(plugin)
 
 			// Assert
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			var actual []ObjectA
 
 			err = testData.query(db).Where(testData.filter).Find(&actual).Error
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, testData.expected, actual)
 		})
@@ -429,7 +429,6 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithConditionalTag(t *testin
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -446,11 +445,11 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithConditionalTag(t *testin
 			err := db.Use(plugin)
 
 			// Assert
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			var actual []ObjectB
 			err = db.Where(testData.filter).Find(&actual).Error
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, testData.expected, actual)
 		})
@@ -494,7 +493,6 @@ func TestGormLike_Initialize_AlwaysIgnoresFieldsWithGormLikeFalse(t *testing.T) 
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -511,11 +509,11 @@ func TestGormLike_Initialize_AlwaysIgnoresFieldsWithGormLikeFalse(t *testing.T) 
 			err := db.Use(plugin)
 
 			// Assert
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			var actual []ObjectB
 			err = db.Where(testData.filter).Find(&actual).Error
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, testData.expected, actual)
 		})
@@ -579,7 +577,6 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -598,11 +595,11 @@ func TestGormLike_Initialize_TriggersLikingCorrectlyWithSetting(t *testing.T) {
 			err := db.Use(plugin)
 
 			// Assert
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			var actual []ObjectB
 			err = db.Where(testData.filter).Find(&actual).Error
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, testData.expected, actual)
 		})
@@ -637,7 +634,6 @@ func TestGormLike_Initialize_ProcessUnknownFields(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -656,7 +652,7 @@ func TestGormLike_Initialize_ProcessUnknownFields(t *testing.T) {
 			err := db.Use(plugin)
 
 			// Assert
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			var actual []ObjectB
 			err = db.Where(testData.filter).Find(&actual).Error
