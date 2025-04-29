@@ -49,7 +49,7 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 				continue
 			}
 
-			// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
+			// If there are no % AND there aren't only replaceable characters, just skip it because it's a normal query
 			if !strings.Contains(value, "%") && (d.replaceCharacter == "" || !strings.Contains(value, d.replaceCharacter)) {
 				continue
 			}
@@ -96,7 +96,7 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 
 				condition := fmt.Sprintf("%s = ?", cond.Column)
 
-				// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
+				// If there are no % AND there aren't only replaceable characters, just skip it because it's a normal query
 				if strings.Contains(value, "%") || (d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
 					condition = fmt.Sprintf("CAST(%s as varchar) LIKE ?", cond.Column)
 
