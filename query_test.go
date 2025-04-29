@@ -1,6 +1,7 @@
 package gormlike
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -111,8 +112,8 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 		},
 		"more complex like query": {
 			filter: map[string]any{
-				"name": "%a%",
-				"age":  20,
+				"name": []string{"%a%"},
+				"age":  []int{20, 25},
 			},
 			query:    defaultQuery,
 			existing: []ObjectA{jessica1, amy, john},
@@ -376,6 +377,14 @@ func TestGormLike_Initialize_TriggersLikingCorrectly(t *testing.T) {
 			assert.NoError(t, err)
 
 			var actual []ObjectA
+
+			sqlQuery := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+				q := testData.query(tx).Where(testData.filter).Find(&actual)
+				return q
+			})
+
+			fmt.Printf("query: %s\n", sqlQuery)
+
 			err = testData.query(db).Where(testData.filter).Find(&actual).Error
 			assert.NoError(t, err)
 

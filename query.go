@@ -50,7 +50,7 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 			}
 
 			// If there are no % AND there aren't ony replaceable characters, just skip it because it's a normal query
-			if !strings.Contains(value, "%") && !(d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
+			if !strings.Contains(value, "%") && (d.replaceCharacter == "" || !strings.Contains(value, d.replaceCharacter)) {
 				continue
 			}
 
@@ -115,14 +115,17 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 				continue
 			}
 
+			expressions[index] = query.Statement.Clauses["WHERE"].Expression.(clause.Where)
 			// This feels a bit like a dirty hack
 			// but otherwise the generated query would not be correct in case of an AND condition between multiple OR conditions
 			// e.g. without this -> x = .. OR x = .. AND y = .. OR y = .. (no brackets around the OR conditions mess up the query)
 			// e.g. with this -> (x = .. OR x = ..) AND (y = .. OR y = ..)
-			var newExpression clause.OrConditions
-			newExpression.Exprs = query.Statement.Clauses["WHERE"].Expression.(clause.Where).Exprs
+			if len(query.Statement.Clauses["WHERE"].Expression.(clause.Where).Exprs) > 1 {
+				var newExpression clause.OrConditions
+				newExpression.Exprs = query.Statement.Clauses["WHERE"].Expression.(clause.Where).Exprs
 
-			expressions[index] = newExpression
+				expressions[index] = newExpression
+			}
 		}
 	}
 
