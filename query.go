@@ -23,14 +23,14 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 			cond.Exprs = d.replaceExpressions(db, cond.Exprs)
 			expressions[index] = cond
 		case clause.Eq:
-			columnName, columnOk := cond.Column.(string)
+			column, columnOk := cond.Column.(clause.Column)
 			if !columnOk {
 				continue
 			}
 
 			// Get the `gormlike` value
 			var tagValue string
-			dbField, ok := db.Statement.Schema.FieldsByDBName[columnName]
+			dbField, ok := db.Statement.Schema.FieldsByDBName[column.Name]
 			if ok {
 				tagValue = dbField.Tag.Get(tagName)
 			}
@@ -55,7 +55,7 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 				continue
 			}
 
-			condition := fmt.Sprintf("CAST(%s as varchar) LIKE ?", cond.Column)
+			condition := fmt.Sprintf("CAST(%s as varchar) LIKE ?", column.Name)
 
 			if d.replaceCharacter != "" {
 				value = strings.ReplaceAll(value, d.replaceCharacter, "%")
@@ -63,14 +63,14 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 
 			expressions[index] = db.Session(&gorm.Session{NewDB: true}).Where(condition, value).Statement.Clauses["WHERE"].Expression
 		case clause.IN:
-			columnName, columnOk := cond.Column.(string)
+			column, columnOk := cond.Column.(clause.Column)
 			if !columnOk {
 				continue
 			}
 
 			// Get the `gormlike` value
 			var tagValue string
-			dbField, ok := db.Statement.Schema.FieldsByDBName[columnName]
+			dbField, ok := db.Statement.Schema.FieldsByDBName[column.Name]
 			if ok {
 				tagValue = dbField.Tag.Get(tagName)
 			}
@@ -95,11 +95,11 @@ func (d *gormLike) replaceExpressions(db *gorm.DB, expressions []clause.Expressi
 					continue
 				}
 
-				condition := fmt.Sprintf("%s = ?", cond.Column)
+				condition := fmt.Sprintf("%s = ?", column.Name)
 
 				// If there are no % AND there aren't only replaceable characters, just skip it because it's a normal query
 				if strings.Contains(value, "%") || (d.replaceCharacter != "" && strings.Contains(value, d.replaceCharacter)) {
-					condition = fmt.Sprintf("CAST(%s as varchar) LIKE ?", cond.Column)
+					condition = fmt.Sprintf("CAST(%s as varchar) LIKE ?", column.Name)
 
 					if d.replaceCharacter != "" {
 						value = strings.ReplaceAll(value, d.replaceCharacter, "%")

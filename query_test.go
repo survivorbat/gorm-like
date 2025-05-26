@@ -656,7 +656,7 @@ func TestGormLike_Initialize_ProcessUnknownFields(t *testing.T) {
 
 			var actual []ObjectB
 			err = db.Where(testData.filter).Find(&actual).Error
-			assert.Equal(t, "no such column: unknown_field", err.Error())
+			assert.Equal(t, "no such column: object_bs.unknown_field", err.Error())
 			assert.Nil(t, actual)
 		})
 	}
